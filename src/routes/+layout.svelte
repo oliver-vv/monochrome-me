@@ -40,11 +40,12 @@
 
 	<div class="py-10">
 		<main>
-			<div class="mx-auto max-w-7xl sm:px-6 lg:px-8 h-[80vh]">
-				<slot />
+			<div class="mx-auto max-w-7xl sm:px-6 lg:px-8 h-screen justify-between flex flex-col">
+				<div class="mb-auto">
+					<slot />
+				</div>
+				<Footer />
 			</div>
 		</main>
 	</div>
-
-	<Footer />
 </div>

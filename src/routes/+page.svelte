@@ -30,8 +30,7 @@
 				>
 					<Carousel.Content>
 						<Carousel.Item><img src="https://picsum.photos/600/800" alt="" /></Carousel.Item>
-
-						<Carousel.Item></Carousel.Item>
+						<Carousel.Item><img src="https://picsum.photos/600/800" alt="" /></Carousel.Item>
 					</Carousel.Content>
 					<Carousel.Previous />
 					<Carousel.Next />

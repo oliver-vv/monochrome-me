@@ -10,7 +10,7 @@
 
 <!-- https://v0.dev/t/JGZ8PB5yjvR -->
 
-<div class="flex flex-col min-h-screen bg-white dark:bg-gray-900">
+<div class="flex flex-col bg-white dark:bg-gray-900">
 	<main>
 		<section>
 			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
