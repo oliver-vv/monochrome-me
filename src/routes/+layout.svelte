@@ -19,19 +19,19 @@
 
 	onMount(() => {
 		console.log('Mounted');
-		const unsubscribe = auth.onAuthStateChanged(async (user) => {
-			const currentPath = window.location.pathname;
+		// const unsubscribe = auth.onAuthStateChanged(async (user) => {
+		// 	const currentPath = window.location.pathname;
 
-			if (!user && !nonAuthRoutes.includes(currentPath)) {
-				window.location.href = '/login';
-				return;
-			}
+		// 	if (!user && !nonAuthRoutes.includes(currentPath)) {
+		// 		window.location.href = '/login';
+		// 		return;
+		// 	}
 
-			if (user && currentPath === '/login') {
-				window.location.href = '/dashboard';
-				return;
-			}
-		});
+		// 	if (user && currentPath === '/login') {
+		// 		window.location.href = '/dashboard';
+		// 		return;
+		// 	}
+		// });
 	});
 </script>
 
