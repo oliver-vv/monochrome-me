@@ -15,7 +15,7 @@
 	};
 </script>
 
-<div class="md:hidden" id="mobile-menu">
+<div class="lg:hidden" id="mobile-menu">
 	<Sheet.Root>
 		<Sheet.Trigger class="-mr-2 flex items-center">
 			<div class="rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
@@ -35,14 +35,14 @@
 				</svg>
 			</div>
 		</Sheet.Trigger>
-		<Sheet.Content side="left" class="w-56 pt-14">
+		<Sheet.Content side="left" class="w-56 md:w-64 pt-14">
 			<Sheet.Header>
 				<Sheet.Title></Sheet.Title>
 				<Sheet.Description></Sheet.Description>
 			</Sheet.Header>
 
 			<Sheet.Close>
-				<div class="grid gap-4 w-44">
+				<div class="grid gap-4 w-44 md:w-52">
 					<Button
 						class="w-full justify-start"
 						variant={isCurrentPage('/booking') ? 'default' : 'secondary'}
@@ -53,12 +53,12 @@
 					<Button
 						class="w-full justify-start"
 						variant={isCurrentPage('/my-sessions') ? 'default' : 'secondary'}
-						href="404">My sessions</Button
+						href="sessions">My sessions</Button
 					>
 					<Button
 						class="w-full justify-start"
 						variant={isCurrentPage('/downloads') ? 'default' : 'secondary'}
-						href="404">Downloads</Button
+						href="downloads">Downloads</Button
 					>
 					<Separator />
 

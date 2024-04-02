@@ -8,11 +8,16 @@
 		// For simplicity, this example assumes the href exactly matches the pathname
 		return href === $page.url.pathname;
 	};
+
+	export let data: any;
+	let { supabase, session } = data;
+	$: ({ supabase, session } = data);
 </script>
 
 <!--
   <html class="h-full">
   <body class="h-full">
 -->
-
-<NavbarDesktop />
+<div class="sticky top-0 z-50">
+	<NavbarDesktop {session} />
+</div>
