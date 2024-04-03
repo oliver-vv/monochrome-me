@@ -3,6 +3,8 @@
 	import { onMount } from 'svelte';
 
 	import { toast } from 'svelte-sonner';
+	import { page } from '$app/stores';
+	import { getFlash } from 'sveltekit-flash-message';
 
 	export let data;
 	let { supabase } = data;
@@ -15,6 +17,16 @@
 		.catch((error) => {
 			console.log(error);
 		});
+
+	const flash = getFlash(page);
+
+	$: if ($flash) {
+		console.log('flash', $flash);
+		toast($flash.message);
+
+		// Clear the flash message to avoid double-toasting.
+		$flash = undefined;
+	}
 
 	onMount(() => {
 		// const unsubscribe = session.subscribe(($session: { justLoggedIn: any }) => {

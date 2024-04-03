@@ -15,25 +15,20 @@
 	export let data;
 
 	import { setMode, mode } from 'mode-watcher';
-	import { set } from 'date-fns';
 	import { toast } from 'svelte-sonner';
+	import { getFlash } from 'sveltekit-flash-message';
+	import { page } from '$app/stores';
 
 	setMode('light');
-	$: console.log($mode);
 
-	let { supabase } = data;
-	$: ({ supabase } = data);
+	const flash = getFlash(page);
+	$: if ($flash) {
+		console.log('flash', $flash);
+		toast($flash.message);
 
-	supabase.auth.onAuthStateChange((event, session) => {
-		console.log(event);
-		// console.log(session);
-		if (event === 'SIGNED_OUT') {
-			// console.log('SIGNED_OUT', session);
-			toast.warning('You have been signed out');
-		}
-
-		// if (event === 'SIGNED_IN') console.log('SIGNED_IN', session);
-	});
+		// Clear the flash message to avoid double-toasting.
+		$flash = undefined;
+	}
 </script>
 
 <ModeWatcher defaultMode={'light'}></ModeWatcher>

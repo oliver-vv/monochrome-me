@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { setFlash } from 'sveltekit-flash-message/server';
 
 export const POST = async (event) => {
 	const {
@@ -17,6 +18,8 @@ export const POST = async (event) => {
 			}
 		});
 	}
+
+	setFlash({ type: 'success', message: 'Successfully logged out!' }, event.cookies);
 
 	return new Response(null, { status: 200, headers: { location: '/' } });
 };

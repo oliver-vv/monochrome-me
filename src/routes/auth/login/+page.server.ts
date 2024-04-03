@@ -1,9 +1,14 @@
 import type { Actions, PageServerLoad } from './$types';
-import { superValidate } from 'sveltekit-superforms';
+import { message, superValidate } from 'sveltekit-superforms';
 
 import { zod } from 'sveltekit-superforms/adapters';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { loginSchema } from './schema';
+
+import { redirect, setFlash } from 'sveltekit-flash-message/server';
+import { error } from '@sveltejs/kit';
+
+import * as flashModule from 'sveltekit-flash-message/client';
 
 export const load: PageServerLoad = async () => {
 	return {
@@ -15,7 +20,9 @@ export const actions: Actions = {
 	default: async (event) => {
 		const form = await superValidate(event, zod(loginSchema));
 		if (!form.valid) {
-			return fail(400, { form });
+			return message(form, 'Invalid form', {
+				status: 400
+			});
 		}
 
 		// Proceed with Supabase authentication if validation succeeds
@@ -25,11 +32,23 @@ export const actions: Actions = {
 			password: form.data.password
 		});
 		if (error) {
-			return fail(401, { form, message: 'Authentication failed' });
-			// throw redirect(401, '/dashboard?login=failed');
+			return message(form, error.message, {
+				status: 401
+			});
 		} else {
-			return form;
-			// throw redirect(303, '/dashboard?login=success');
+			// return redirect(200, "/", { type: 'success', message: "That's the entrepreneur spirit!" });
+			// return message(form, 'Valid form!');
+			// redirect(
+			// 	'/dashboard',
+			// 	{ type: 'success', message: "That's the entrepreneur spirit!" }
+			// );
+			// setFlash({ type: 'success', message: 'Please enter text.' }, event.cookies);
+
+			redirect(
+				'/dashboard',
+				{ type: 'success', message: 'Successfully logged in!' },
+				event.cookies
+			);
 		}
 	}
 };
