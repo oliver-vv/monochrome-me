@@ -8,10 +8,6 @@
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { ModeWatcher } from 'mode-watcher';
 
-	onMount(() => {
-		console.log('Mounted');
-	});
-
 	export let data;
 
 	import { setMode, mode } from 'mode-watcher';
@@ -47,5 +43,3 @@
 
 	<Footer />
 </div>
-
-<!-- <div class=" bg-background"></div> -->

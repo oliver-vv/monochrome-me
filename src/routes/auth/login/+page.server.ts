@@ -2,7 +2,6 @@ import type { Actions, PageServerLoad } from './$types';
 import { message, superValidate } from 'sveltekit-superforms';
 
 import { zod } from 'sveltekit-superforms/adapters';
-import { fail } from '@sveltejs/kit';
 import { loginSchema } from './schema';
 
 import { redirect, setFlash } from 'sveltekit-flash-message/server';
@@ -36,12 +35,6 @@ export const actions: Actions = {
 				status: 401
 			});
 		} else {
-			// return redirect(200, "/", { type: 'success', message: "That's the entrepreneur spirit!" });
-			// return message(form, 'Valid form!');
-			// redirect(
-			// 	'/dashboard',
-			// 	{ type: 'success', message: "That's the entrepreneur spirit!" }
-			// );
 			// setFlash({ type: 'success', message: 'Please enter text.' }, event.cookies);
 
 			redirect(

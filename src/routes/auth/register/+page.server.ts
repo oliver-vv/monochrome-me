@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
-import { superValidate } from 'sveltekit-superforms';
+import { message, superValidate } from 'sveltekit-superforms';
 import { registerSchema } from './schema';
 import { zod } from 'sveltekit-superforms/adapters';
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect, setFlash } from 'sveltekit-flash-message/server';
 
 export const load: PageServerLoad = async () => {
 	return {
@@ -14,7 +14,9 @@ export const actions: Actions = {
 	default: async (event) => {
 		const form = await superValidate(event, zod(registerSchema));
 		if (!form.valid) {
-			return fail(400, { form });
+			return message(form, 'Invalid form', {
+				status: 400
+			});
 		}
 
 		// Proceed with Supabase authentication if validation succeeds
@@ -27,12 +29,15 @@ export const actions: Actions = {
 			}
 		});
 		if (error) {
-			// Handle the error, e.g., by returning a specific message to the client
-			fail(401, { form });
+			return message(form, error.message, {
+				status: 401
+			});
 		} else {
-			// return { form };
-			// Optionally, redirect users after successful login
-			throw redirect(303, '/dashboard');
+			redirect(
+				'/dashboard',
+				{ type: 'success', message: 'Successfully registered!' },
+				event.cookies
+			);
 		}
 	}
 };

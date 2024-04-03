@@ -9,8 +9,6 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { loginSchema, type LoginSchema } from './schema';
 
-	import * as flashModule from 'sveltekit-flash-message/client';
-
 	import { page } from '$app/stores';
 	import { toast } from 'svelte-sonner';
 
@@ -22,15 +20,15 @@
 
 	const form = superForm(fdata, {
 		validators: zodClient(loginSchema),
-
+		onSubmit() {
+			if ($errors.email || $errors.password) {
+				toast.warning('Invalid email or password');
+			}
+		},
 		onUpdated({ form }) {
 			if (form.message) {
-				// Display the message using a toast library
-				console.log(form.message);
-				toast(form.message);
+				toast.error(form.message);
 			}
-
-			// if ($page.status === 200) toast.success('Login successful');
 		}
 	});
 
@@ -41,12 +39,6 @@
 			provider: 'google'
 		});
 	}
-
-	// function checkErrorToast() {
-	// 	if ($errors.email || $errors.password) {
-	// 		toast.error('Invalid email or password');
-	// 	}
-	// }
 </script>
 
 <div class="gap-5 grid">
