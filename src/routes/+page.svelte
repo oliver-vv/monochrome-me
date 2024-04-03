@@ -2,6 +2,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Carousel from '$lib/components/ui/carousel/index.js';
 	import Autoscroll from 'embla-carousel-auto-scroll';
+	import { toast } from 'svelte-sonner';
 </script>
 
 <main>
@@ -29,6 +30,7 @@
 						commodo. Elit sunt amet fugiat veniam occaecat fugiat aliqua.
 					</p>
 					<div class="mt-10 flex items-center gap-x-6">
+						‚
 						<a
 							href="/"
 							class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
@@ -102,6 +104,12 @@
 		</div>
 	</div>
 </main>
+
+<Button
+	on:click={() => {
+		toast('ITS WORKLING');
+	}}>Test sonner</Button
+>
 
 <!-- <Carousel.Root
 					class="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square"

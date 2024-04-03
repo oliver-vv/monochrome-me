@@ -1,52 +1,30 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	// import { session } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { authHandlers, user } from '../../stores/authStore';
-	import { cancelBookedSlot, getUserBookedSlots } from '../../lib/firebase/firebase';
-	// import { Drawer, Table, tableMapperValues } from '@skeletonlabs/skeleton';
-	// import type { DrawerSettings, TableSource } from '@skeletonlabs/skeleton';
-	import type { ITimeSlot } from '../../components/TimeSlot';
-	import { format } from 'date-fns';
 
-	// import { getDrawerStore } from '@skeletonlabs/skeleton';
-	// import { bookings } from '../../stores/bookingStore';
+	import { toast } from 'svelte-sonner';
 
-	let isLoading = true;
-	let bookedSlots: any[] = [];
+	export let data;
+	let { supabase } = data;
 
-	$: $user && fetchData();
+	supabase.auth
+		.getSession()
+		.then((session) => {
+			console.log(session);
+		})
+		.catch((error) => {
+			console.log(error);
+		});
 
-	async function fetchData() {
-		isLoading = true;
-		try {
-			if ($user) {
-				bookedSlots = await getUserBookedSlots($user.uid);
-			}
-		} catch (error) {
-			console.error('Error fetching data:', error);
-		} finally {
-			isLoading = false;
-		}
-	}
-
-	// If sourceData updates, set the new TableSource values
-
-	function onSelect(event: any) {
-		console.log('meta: ', event.detail);
-
-		//drawer
-
-		//bgBackdrop: 'bg-gradient-to-tr from-indigo-500/50 via-purple-500/50 to-pink-500/50'
-		// drawerStore.open(drawerSettings);
-	}
-
-	function handleCancel(slotId: string, roomType: 'black' | 'white', dateString: string) {
-		console.log('handleCancel');
-
-		if ($user) {
-			cancelBookedSlot(slotId, dateString, $user.uid);
-		}
-	}
+	onMount(() => {
+		// const unsubscribe = session.subscribe(($session: { justLoggedIn: any }) => {
+		// 	// Check for the flag and display the toast
+		// 	if ($session.justLoggedIn) {
+		// 		toast.success('Login successful. Welcome back!');
+		// 	}
+		// });
+		// return unsubscribe; // Cleanup the subscription when the component is destroyed
+	});
 </script>
 
 <p>TEst</p>

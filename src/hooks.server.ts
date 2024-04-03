@@ -52,7 +52,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		session &&
 		(event.url.pathname === '/auth/register' || event.url.pathname === '/auth/login')
 	) {
-		throw redirect(302, '/dashboard');
+		throw redirect(302, `/dashboard`);
 	}
 
 	return resolve(event, {
