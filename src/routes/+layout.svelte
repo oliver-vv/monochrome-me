@@ -14,6 +14,8 @@
 	import { getFlash } from 'sveltekit-flash-message';
 	import { page } from '$app/stores';
 
+	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+
 	setMode('light');
 
 	const flash = getFlash(page);
@@ -22,6 +24,9 @@
 		// Clear the flash message to avoid double-toasting.
 		$flash = undefined;
 	}
+
+	// TODO: Remove this
+	injectSpeedInsights();
 </script>
 
 <ModeWatcher defaultMode={'light'}></ModeWatcher>

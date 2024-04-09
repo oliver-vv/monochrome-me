@@ -44,6 +44,7 @@
 		"@prisma/client": "^5.12.0",
 		"@supabase/ssr": "^0.1.0",
 		"@sveltejs/enhanced-img": "^0.1.8",
+		"@vercel/speed-insights": "^1.0.10",
 		"bits-ui": "^0.18.6",
 		"clsx": "^2.1.0",
 		"date-fns": "^3.3.1",
