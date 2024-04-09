@@ -2,7 +2,6 @@
 	import '../app.pcss';
 
 	import Navbar from '$lib/components/ui/navbar/navbar.svelte';
-	import { onMount } from 'svelte';
 
 	import Footer from '$lib/components/ui/footer/footer.svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
@@ -19,26 +18,25 @@
 
 	const flash = getFlash(page);
 	$: if ($flash) {
-		console.log('flash', $flash);
 		toast($flash.message);
-
 		// Clear the flash message to avoid double-toasting.
 		$flash = undefined;
 	}
 </script>
 
 <ModeWatcher defaultMode={'light'}></ModeWatcher>
-<Toaster theme="light" />
 
-<div class="flex flex-col min-h-screen">
+<Toaster theme="light" richColors position="bottom-right" />
+
+<div class="flex min-h-screen flex-col">
 	<Navbar {data} />
 
-	<main class="flex-1 flex justify-center items-center">
-		<div class=" w-full mx-auto max-w-7xl sm:px-6 lg:px-8">
-			<!-- Main content goes here -->
+	<main class="flex flex-1 items-center justify-center">
+		<!-- Main content goes here -->
+		<!-- <div class=" w-full mx-auto max-w-7xl sm:px-6 lg:px-8">
 
-			<slot />
-		</div>
+		</div> -->
+		<slot />
 	</main>
 
 	<Footer />

@@ -17,9 +17,10 @@ export const POST = async (event) => {
 				'Content-Type': 'application/json'
 			}
 		});
+	} else {
+		setFlash({ type: 'success', message: 'Successfully logged out!' }, event.cookies);
+
+		// return new Response(null, { status: 200 });
+		throw redirect(303, '/');
 	}
-
-	setFlash({ type: 'success', message: 'Successfully logged out!' }, event.cookies);
-
-	return new Response(null, { status: 200, headers: { location: '/' } });
 };

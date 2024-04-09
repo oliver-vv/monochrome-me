@@ -1,31 +1,41 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import CalendarIcon from 'svelte-radix/Calendar.svelte';
-	import Reload from 'svelte-radix/Reload.svelte';
+	import { cn } from '$lib/utils';
+
 	import { Separator } from '$lib/components/ui/separator';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
 	import { Calendar } from '$lib/components/ui/calendar';
+	import { mediaQuery } from 'svelte-legos';
+	import { selectedSlots } from '../../stores/bookingStore';
+
+	import type { ITimeSlot } from '../../components/TimeSlot';
+	import { type DateValue, DateFormatter, today } from '@internationalized/date';
+
+	import CalendarIcon from 'svelte-radix/Calendar.svelte';
+	import Reload from 'svelte-radix/Reload.svelte';
+
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Popover from '$lib/components/ui/popover';
 	import * as Select from '$lib/components/ui/select';
 	import * as Drawer from '$lib/components/ui/drawer';
-	import { cn } from '$lib/utils';
-	import type { ITimeSlot } from '../../components/TimeSlot';
-	import { type DateValue, DateFormatter, today } from '@internationalized/date';
-	import { getTimeSlotsForDate } from '$lib/firebase/firebase';
-	import { user } from '../../stores/authStore';
-	import { selectedSlots } from '../../stores/bookingStore';
-	import { mediaQuery } from 'svelte-legos';
+	import { format } from 'date-fns';
 
 	let blackRoomSlots: ITimeSlot[] = [];
 	let whiteRoomSlots: ITimeSlot[] = [];
 
 	let value = today('Europe/Berlin');
 
+	export let data;
+	let { supabase } = data;
+	$: ({ supabase } = data);
+
+	let error = '';
+
 	onMount(async () => {
 		fetchSlots(value.toString());
+		console.log(blackRoomSlots, whiteRoomSlots);
 	});
 
 	const isDesktop = mediaQuery('(min-width: 768px)');
@@ -34,20 +44,34 @@
 	let isLoadingCheckout: boolean = false;
 
 	async function fetchSlots(date: string) {
-		isLoadingSlots = true;
-		const fetchedSlots = await getTimeSlotsForDate(date);
+		try {
+			const response = await fetch(`/api/get-slots-for-date?date=${date}`);
+			if (!response.ok) {
+				throw new Error(`Error fetching slots: ${response.statusText}`);
+			}
+			const data = await response.json();
+			blackRoomSlots = data.blackRoomSlots;
+			whiteRoomSlots = data.whiteRoomSlots;
+		} catch (err) {
+			error = (err as Error).message;
+		}
 
-		whiteRoomSlots = fetchedSlots.filter((slot: ITimeSlot) => slot.roomType === 'white');
-		blackRoomSlots = fetchedSlots.filter((slot: ITimeSlot) => slot.roomType === 'black');
-
-		blackRoomSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
-		whiteRoomSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
-		isLoadingSlots = false;
+		// const slotsForSelectedDate = await prisma.slots.findMany({
+		// 	where: {
+		// 		date: new Date(date)
+		// 	},
+		// 	orderBy: {
+		// 		startTime: 'asc' // Or 'desc' depending on how you want to order the rooms
+		// 	}
+		// });
+		// blackRoomSlots = slotsForSelectedDate.filter((slot: ITimeSlot) => slot.room === 'BLACK');
+		// whiteRoomSlots = slotsForSelectedDate.filter((slot: ITimeSlot) => slot.room === 'WHITE');
+		// console.log(blackRoomSlots, whiteRoomSlots);
 	}
 
-	const df = new DateFormatter('en-US', {
-		dateStyle: 'long'
-	});
+	// const df = new DateFormatter('en-US', {
+	// 	dateStyle: 'long'
+	// });
 
 	const items = [
 		{ value: 0, label: 'Today' },
@@ -65,17 +89,21 @@
 	}
 
 	async function checkout(slots: ITimeSlot[]) {
-		const slotData = slots.map((slot) => ({
-			id: slot.id,
-			time: `${slot.startTime} - ${slot.endTime}`
-		}));
+		const {
+			data: { user }
+		} = await supabase.auth.getUser();
 
+		if (!user) {
+			return;
+		}
+		// time: `${slot.startTime.split('T')[1].substring(0, 5)} - ${slot.endTime.split('T')[1].substring(0, 5)}`
+		const slotIds = $selectedSlots.map((slot) => slot.id);
 		const data = await fetch('/checkout', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ uId: $user?.uid, date: value.toString(), slots: slotData })
+			body: JSON.stringify({ uId: user.id, date: value.toString(), slotIds: slotIds })
 		}).then((data) => data.json());
 		return data;
 	}
@@ -95,7 +123,7 @@
 				return currentSlots.filter((s) => s.id !== slot.id);
 			}
 		});
-		console.log($selectedSlots);
+		console.log('SelectedSlots: ', $selectedSlots);
 	}
 
 	let open = false;
@@ -109,7 +137,7 @@
 			minValue={today('Europe/Berlin')}
 		/>
 
-		<div class="block md:hidden">
+		<!-- <div class="block md:hidden">
 			<Popover.Root openFocus>
 				<Popover.Trigger asChild let:builder>
 					<Button
@@ -146,7 +174,7 @@
 					</div>
 				</Popover.Content>
 			</Popover.Root>
-		</div>
+		</div> -->
 
 		<Separator class="mx-10 h-72 hidden md:block" orientation="vertical" />
 		<Separator class="my-2 w-3/4 md:hidden" orientation="horizontal" />
@@ -170,11 +198,13 @@
 									class="h-12 bg-red-100 hover:bg-red-100"
 									on:click={() => selectSlot(slot)}
 								>
-									{slot.startTime} - {slot.endTime}
+									{slot.startTime.split('T')[1].substring(0, 5)} -
+									{slot.endTime.split('T')[1].substring(0, 5)}
 								</Button>
 							{:else}
 								<Button variant="outline" class="h-12" on:click={() => selectSlot(slot)}>
-									{slot.startTime} - {slot.endTime}
+									{slot.startTime.split('T')[1].substring(0, 5)} -
+									{slot.endTime.split('T')[1].substring(0, 5)}
 								</Button>
 							{/if}
 						{/each}
@@ -199,11 +229,13 @@
 									class="h-12 bg-red-100 hover:bg-red-100"
 									on:click={() => selectSlot(slot)}
 								>
-									{slot.startTime} - {slot.endTime}
+									{slot.startTime.split('T')[1].substring(0, 5)} -
+									{slot.endTime.split('T')[1].substring(0, 5)}
 								</Button>
 							{:else}
 								<Button variant="outline" class="h-12" on:click={() => selectSlot(slot)}>
-									{slot.startTime} - {slot.endTime}
+									{slot.startTime.split('T')[1].substring(0, 5)} -
+									{slot.endTime.split('T')[1].substring(0, 5)}
 								</Button>
 							{/if}
 						{/each}
@@ -250,7 +282,7 @@
 					</AlertDialog.Content>
 				</AlertDialog.Root>
 			{:else}
-				<Drawer.Root bind:open>
+				<!-- <Drawer.Root bind:open>
 					<Drawer.Trigger asChild let:builder>
 						{#if isLoadingCheckout}
 							<Button disabled>
@@ -277,7 +309,7 @@
 							</Drawer.Close>
 						</Drawer.Footer>
 					</Drawer.Content>
-				</Drawer.Root>
+				</Drawer.Root> -->
 			{/if}
 		</div>
 	{/if}

@@ -25,7 +25,10 @@ export const actions: Actions = {
 			email: form.data.email,
 			password: form.data.password,
 			options: {
-				emailRedirectTo: 'https://example.com/welcome'
+				data: {
+					first_name: form.data.first_name,
+					last_name: form.data.last_name
+				}
 			}
 		});
 		if (error) {

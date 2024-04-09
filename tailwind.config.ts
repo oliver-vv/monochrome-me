@@ -55,7 +55,7 @@ const config = {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: [...fontFamily.sans],
+				sans: ['Inter', ...fontFamily.sans],
 				blockquote: 'var(--blockquote-font-family)',
 				body: 'var(--body-font-family)',
 				'body-medium': 'var(--body-medium-font-family)',

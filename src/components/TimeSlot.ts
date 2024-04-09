@@ -1,8 +1,9 @@
 export interface ITimeSlot {
-  id: string;
-  startTime: string;
-  endTime: string;
-  available: boolean;
-  roomType: 'black' | 'white';
-  date: string;
+	id: string;
+	date: string;
+	startTime: string;
+	endTime: string;
+	room: 'BLACK' | 'WHITE';
+	available: boolean;
+	profileId: string;
 }

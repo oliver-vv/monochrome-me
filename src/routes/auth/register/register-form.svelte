@@ -20,7 +20,7 @@
 		onSubmit() {
 			if ($errors.email || $errors.password) {
 				toast.warning('Invalid email or password');
-			} else if ($errors.confirmPassword) {
+			} else if ($errors.confirm_password) {
 				toast.warning('Passwords do not match');
 			}
 		},
@@ -48,6 +48,28 @@
 	<Card.Content>
 		<form method="POST" use:enhance>
 			<div class="grid gap-4">
+				<div class="grid grid-cols-2 gap-4">
+					<div class="grid gap-2">
+						<Form.Field {form} name="first_name">
+							<Form.Control let:attrs>
+								<Form.Label>Fist Name</Form.Label>
+								<Input {...attrs} bind:value={$formData.first_name} placeholder="Your first name" />
+							</Form.Control>
+
+							<Form.FieldErrors />
+						</Form.Field>
+					</div>
+					<div class="grid gap-2">
+						<Form.Field {form} name="last_name">
+							<Form.Control let:attrs>
+								<Form.Label>Last Name</Form.Label>
+								<Input {...attrs} bind:value={$formData.last_name} placeholder="Your last name" />
+							</Form.Control>
+
+							<Form.FieldErrors />
+						</Form.Field>
+					</div>
+				</div>
 				<div class="grid gap-2">
 					<Form.Field {form} name="email">
 						<Form.Control let:attrs>
@@ -75,13 +97,13 @@
 				</div>
 
 				<div class="grid gap-2">
-					<Form.Field {form} name="confirmPassword">
+					<Form.Field {form} name="confirm_password">
 						<Form.Control let:attrs>
 							<Form.Label>Confirm Password</Form.Label>
 							<Input
 								{...attrs}
 								type="password"
-								bind:value={$formData.confirmPassword}
+								bind:value={$formData.confirm_password}
 								placeholder="Confirm your password"
 							/>
 						</Form.Control>
