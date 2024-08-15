@@ -25,11 +25,11 @@
 </script>
 
 <nav>
-	<div class="sticky mt-5 z-50">
+	<div class="sticky z-50 mt-5">
 		<!-- <NavbarDesktop {data} /> -->
-		<div class="flex w-[1120px] h-10 justify-between items-center flex-shrink-0 mx-auto">
+		<div class="mx-auto flex h-10 w-[1120px] flex-shrink-0 items-center justify-between">
 			<a href="/">
-				<img class="p-2 block h-20 w-auto" src="/logo.png" alt="Monochrome Me" />
+				<img class="block h-20 w-auto p-2" src="/logo.png" alt="Monochrome Me" />
 			</a>
 			<div class="flex gap-5">
 				<Button variant="ghost" href="/booking">Book Now</Button>
