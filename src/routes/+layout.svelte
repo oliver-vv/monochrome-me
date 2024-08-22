@@ -43,6 +43,8 @@
 		</div> -->
 
 	<!-- </main> -->
-	<slot />
+	<main class="flex flex-1 items-center justify-center">
+		<slot />
+	</main>
 	<Footer />
 </div>

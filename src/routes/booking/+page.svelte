@@ -130,10 +130,10 @@
 </script>
 
 <main>
-	<div class="flex flex-col md:flex-row items-center gap-4 justify-center">
+	<div class="flex flex-col items-center justify-center gap-4 md:flex-row">
 		<Calendar
 			bind:value
-			class="rounded-md border hidden md:block"
+			class="hidden rounded-md border md:block"
 			minValue={today('Europe/Berlin')}
 		/>
 
@@ -176,12 +176,12 @@
 			</Popover.Root>
 		</div> -->
 
-		<Separator class="mx-10 h-72 hidden md:block" orientation="vertical" />
+		<Separator class="mx-10 hidden h-72 md:block" orientation="vertical" />
 		<Separator class="my-2 w-3/4 md:hidden" orientation="horizontal" />
 
 		<Tabs.Root
 			value="whiteRoom"
-			class="w-[400px] min-h-[400px]"
+			class="min-h-[400px] w-[400px]"
 			onValueChange={() => ($selectedSlots = [])}
 		>
 			<Tabs.List class="grid w-full grid-cols-2">
@@ -210,7 +210,7 @@
 						{/each}
 
 						{#if whiteRoomSlots.length === 0}
-							<p class="pt-5 col-span-2 text-center text-muted-foreground">No slots available</p>
+							<p class="col-span-2 pt-5 text-center text-muted-foreground">No slots available</p>
 						{/if}
 					{:else}
 						{#each Array(12).fill(0) as _, index}
@@ -241,7 +241,7 @@
 						{/each}
 
 						{#if blackRoomSlots.length === 0}
-							<p class="pt-5 col-span-2 text-center text-muted-foreground">No slots available</p>
+							<p class="col-span-2 pt-5 text-center text-muted-foreground">No slots available</p>
 						{/if}
 					{:else}
 						{#each Array(12).fill(0) as _, index}
