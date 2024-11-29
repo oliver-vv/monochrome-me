@@ -23,13 +23,13 @@ export const actions: Actions = {
 		const { supabase } = event.locals;
 		const { data, error } = await supabase.auth.signUp({
 			email: form.data.email,
-			password: form.data.password,
-			options: {
-				data: {
-					first_name: form.data.first_name,
-					last_name: form.data.last_name
-				}
-			}
+			password: form.data.password
+			// options: {
+			// 	data: {
+			// 		first_name: form.data.first_name,
+			// 		last_name: form.data.last_name
+			// 	}
+			// }
 		});
 		if (error) {
 			return message(form, error.message, {

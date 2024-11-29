@@ -1,9 +1,10 @@
 export interface ITimeSlot {
 	id: string;
-	date: string;
-	startTime: string;
-	endTime: string;
-	room: 'BLACK' | 'WHITE';
 	available: boolean;
-	profileId: string;
+	date: Date;
+	startTime: Date;
+	endTime: Date;
+	room: 'BLACK' | 'WHITE';
+	profileId: string | null;
+	stripeSessionId: string | null;
 }

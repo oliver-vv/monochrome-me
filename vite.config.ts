@@ -6,5 +6,10 @@ export default defineConfig({
 	plugins: [enhancedImages(), sveltekit()],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
+	},
+	resolve: {
+		alias: {
+			$stores: '/src/stores'
+		}
 	}
 });

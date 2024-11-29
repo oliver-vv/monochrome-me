@@ -23,8 +23,8 @@
 
 	export let blackRoomSlots: ITimeSlot[];
 	export let whiteRoomSlots: ITimeSlot[];
-	export let initialDate: Date;
-	export let isLoadingSlots: boolean;
+	//export let initialDate: Date;
+	//export let isLoadingSlots: boolean;
 
 	let colStartClasses = [
 		'', // MONDAY
@@ -36,8 +36,8 @@
 		'col-start-6' //SUNDAY
 	];
 
-	let selectedDate: Date = startOfDay(initialDate);
-
+	// let selectedDate: Date = startOfDay(initialDate);
+	let selectedDate: Date = startOfDay(Date.now());
 	// let selectedSlots: ITimeSlot[] = [];
 
 	let tabSet: number = 0;

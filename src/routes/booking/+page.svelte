@@ -1,47 +1,58 @@
 <script lang="ts">
+	import { writable } from 'svelte/store';
+	import { selectedDate } from '../../stores/selectedDateStore';
 	import { onMount } from 'svelte';
-	import { cn } from '$lib/utils';
-
-	import { Separator } from '$lib/components/ui/separator';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { addDays, format, parseISO } from 'date-fns';
 	import { Button } from '$lib/components/ui/button';
-	import { Calendar } from '$lib/components/ui/calendar';
-	import { mediaQuery } from 'svelte-legos';
-	import { selectedSlots } from '../../stores/bookingStore';
-
-	import type { ITimeSlot } from '../../components/TimeSlot';
-	import { type DateValue, DateFormatter, today } from '@internationalized/date';
-
-	import CalendarIcon from 'svelte-radix/Calendar.svelte';
-	import Reload from 'svelte-radix/Reload.svelte';
-
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
-	import * as Tabs from '$lib/components/ui/tabs';
-	import * as Popover from '$lib/components/ui/popover';
+	import { cn } from '$lib/utils';
 	import * as Select from '$lib/components/ui/select';
-	import * as Drawer from '$lib/components/ui/drawer';
-	import { format } from 'date-fns';
+	import CalendarV2 from '../../components/Booking/CalendarV2.svelte';
+	import { selectedSlots } from '../../stores/bookingStore';
+	// import type { ITimeSlot } from '../../components/TimeSlot';
+	import type { Selected } from 'bits-ui';
+	import SlotsColumn from '$lib/components/booking/SlotsColumn.svelte';
+	import type { slots } from '@prisma/client';
 
-	let blackRoomSlots: ITimeSlot[] = [];
-	let whiteRoomSlots: ITimeSlot[] = [];
+	$: currentDate = $selectedDate;
+	$: nextDate = addDays(currentDate, 1);
+	$: thirdDate = addDays(currentDate, 2);
 
-	let value = today('Europe/Berlin');
+	let slotsForDates: {
+		[date: string]: {
+			white: slots[];
+			black: slots[];
+		};
+	} = {};
+	let selectedRoom: Selected<string> = { value: 'WHITE', label: 'White Room' };
 
-	export let data;
-	let { supabase } = data;
-	$: ({ supabase } = data);
-
-	let error = '';
+	const rooms = [
+		{ value: 'WHITE', label: 'White Room' },
+		{ value: 'BLACK', label: 'Black Room' }
+	];
 
 	onMount(async () => {
-		fetchSlots(value.toString());
-		console.log(blackRoomSlots, whiteRoomSlots);
+		await fetchSlotsForMultipleDates([currentDate, nextDate, thirdDate]);
 	});
 
-	const isDesktop = mediaQuery('(min-width: 768px)');
-
+	let error = '';
 	let isLoadingSlots: boolean = false;
-	let isLoadingCheckout: boolean = false;
+
+	async function fetchSlotsForMultipleDates(dates: Date[]) {
+		isLoadingSlots = true;
+		const dateStrings = dates.map((date) => format(date, 'yyyy-MM-dd'));
+		try {
+			const response = await fetch(`/api/get-slots-for-dates?dates=${dateStrings.join(',')}`);
+			if (!response.ok) {
+				throw new Error(`Error fetching slots: ${response.statusText}`);
+			}
+			const data = await response.json();
+			slotsForDates = data.slots;
+		} catch (err) {
+			error = (err as Error).message;
+		} finally {
+			isLoadingSlots = false;
+		}
+	}
 
 	async function fetchSlots(date: string) {
 		try {
@@ -50,267 +61,74 @@
 				throw new Error(`Error fetching slots: ${response.statusText}`);
 			}
 			const data = await response.json();
-			blackRoomSlots = data.blackRoomSlots;
-			whiteRoomSlots = data.whiteRoomSlots;
+			slotsForDates[date] = data.slots;
 		} catch (err) {
 			error = (err as Error).message;
 		}
-
-		// const slotsForSelectedDate = await prisma.slots.findMany({
-		// 	where: {
-		// 		date: new Date(date)
-		// 	},
-		// 	orderBy: {
-		// 		startTime: 'asc' // Or 'desc' depending on how you want to order the rooms
-		// 	}
-		// });
-		// blackRoomSlots = slotsForSelectedDate.filter((slot: ITimeSlot) => slot.room === 'BLACK');
-		// whiteRoomSlots = slotsForSelectedDate.filter((slot: ITimeSlot) => slot.room === 'WHITE');
-		// console.log(blackRoomSlots, whiteRoomSlots);
 	}
 
-	// const df = new DateFormatter('en-US', {
-	// 	dateStyle: 'long'
-	// });
-
-	const items = [
-		{ value: 0, label: 'Today' },
-		{ value: 1, label: 'Tomorrow' },
-		{ value: 3, label: 'In 3 days' },
-		{ value: 7, label: 'In a week' }
-	];
-
-	async function bookSlots() {
-		isLoadingCheckout = true;
-		const session = await checkout($selectedSlots);
-		if (session) {
-			window.location.replace(session.url);
+	function handleRoomChange(selected: Selected<string> | undefined) {
+		if (selected) {
+			selectedRoom = {
+				value: selected.value,
+				label: selected.label ?? ''
+			};
+			console.log('room changed to', selected.value);
 		}
 	}
 
-	async function checkout(slots: ITimeSlot[]) {
-		const {
-			data: { user }
-		} = await supabase.auth.getUser();
-
-		if (!user) {
-			return;
-		}
-		// time: `${slot.startTime.split('T')[1].substring(0, 5)} - ${slot.endTime.split('T')[1].substring(0, 5)}`
-		const slotIds = $selectedSlots.map((slot) => slot.id);
-		const data = await fetch('/checkout', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ uId: user.id, date: value.toString(), slotIds: slotIds })
-		}).then((data) => data.json());
-		return data;
-	}
-
-	$: if (value) {
-		fetchSlots(value.toString());
-	}
-
-	function selectSlot(slot: ITimeSlot) {
-		selectedSlots.update((currentSlots) => {
-			const slotIndex = currentSlots.findIndex((s) => s.id === slot.id);
-			if (slotIndex === -1) {
-				// Slot not yet selected, add it
-				return [...currentSlots, slot];
-			} else {
-				// Slot already selected, remove it
-				return currentSlots.filter((s) => s.id !== slot.id);
-			}
-		});
-		console.log('SelectedSlots: ', $selectedSlots);
-	}
-
-	let open = false;
+	$: displaySlots = (date: Date) => {
+		const dateString = format(date, 'yyyy-MM-dd');
+		const roomKey = selectedRoom.value.toLowerCase() as 'black' | 'white';
+		return slotsForDates[dateString]?.[roomKey] || [];
+	};
+	// const locations = [{ value: 'Kantstr', label: 'Kantstrasse 3, 10965 Berlin' }];
 </script>
 
-<main>
-	<div class="flex flex-col items-center justify-center gap-4 md:flex-row">
-		<Calendar
-			bind:value
-			class="hidden rounded-md border md:block"
-			minValue={today('Europe/Berlin')}
-		/>
-
-		<!-- <div class="block md:hidden">
-			<Popover.Root openFocus>
-				<Popover.Trigger asChild let:builder>
-					<Button
-						variant="outline"
-						class={cn(
-							'w-[240px] justify-start text-left font-normal',
-							!value && 'text-muted-foreground'
-						)}
-						builders={[builder]}
-					>
-						<CalendarIcon class="mr-2 h-4 w-4" />
-						{value ? df.format(value.toDate('Europe/Berlin')) : 'Pick a date'}
-					</Button>
-				</Popover.Trigger>
-				<Popover.Content class="flex w-auto flex-col space-y-2 p-2">
-					<Select.Root
-						{items}
-						onSelectedChange={(v) => {
-							if (!v) return;
-							value = today('Europe/Berlin').add({ days: v.value });
-						}}
-					>
-						<Select.Trigger>
-							<Select.Value placeholder="Select" />
-						</Select.Trigger>
-						<Select.Content>
-							{#each items as item}
-								<Select.Item value={item.value}>{item.label}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-					<div class="rounded-md border">
-						<Calendar bind:value minValue={today('Europe/Berlin')} />
-					</div>
-				</Popover.Content>
-			</Popover.Root>
-		</div> -->
-
-		<Separator class="mx-10 hidden h-72 md:block" orientation="vertical" />
-		<Separator class="my-2 w-3/4 md:hidden" orientation="horizontal" />
-
-		<Tabs.Root
-			value="whiteRoom"
-			class="min-h-[400px] w-[400px]"
-			onValueChange={() => ($selectedSlots = [])}
-		>
-			<Tabs.List class="grid w-full grid-cols-2">
-				<Tabs.Trigger value="whiteRoom">White Room</Tabs.Trigger>
-				<Tabs.Trigger value="blackRoom">Black Room</Tabs.Trigger>
-			</Tabs.List>
-			<Tabs.Content value="whiteRoom">
-				<div class="grid grid-cols-2 gap-4">
-					{#if !isLoadingSlots}
-						{#each whiteRoomSlots as slot (slot.id)}
-							{#if $selectedSlots.some((s) => s.id === slot.id)}
-								<Button
-									variant="outline"
-									class="h-12 bg-red-100 hover:bg-red-100"
-									on:click={() => selectSlot(slot)}
-								>
-									{slot.startTime.split('T')[1].substring(0, 5)} -
-									{slot.endTime.split('T')[1].substring(0, 5)}
-								</Button>
-							{:else}
-								<Button variant="outline" class="h-12" on:click={() => selectSlot(slot)}>
-									{slot.startTime.split('T')[1].substring(0, 5)} -
-									{slot.endTime.split('T')[1].substring(0, 5)}
-								</Button>
-							{/if}
-						{/each}
-
-						{#if whiteRoomSlots.length === 0}
-							<p class="col-span-2 pt-5 text-center text-muted-foreground">No slots available</p>
-						{/if}
-					{:else}
-						{#each Array(12).fill(0) as _, index}
-							<Skeleton class="h-[50px] w-full rounded-xl" />
-						{/each}
-					{/if}
-				</div>
-			</Tabs.Content>
-			<Tabs.Content value="blackRoom">
-				<div class="grid grid-cols-2 gap-4">
-					{#if !isLoadingSlots}
-						{#each blackRoomSlots as slot (slot.id)}
-							{#if $selectedSlots.some((s) => s.id === slot.id)}
-								<Button
-									variant="outline"
-									class="h-12 bg-red-100 hover:bg-red-100"
-									on:click={() => selectSlot(slot)}
-								>
-									{slot.startTime.split('T')[1].substring(0, 5)} -
-									{slot.endTime.split('T')[1].substring(0, 5)}
-								</Button>
-							{:else}
-								<Button variant="outline" class="h-12" on:click={() => selectSlot(slot)}>
-									{slot.startTime.split('T')[1].substring(0, 5)} -
-									{slot.endTime.split('T')[1].substring(0, 5)}
-								</Button>
-							{/if}
-						{/each}
-
-						{#if blackRoomSlots.length === 0}
-							<p class="col-span-2 pt-5 text-center text-muted-foreground">No slots available</p>
-						{/if}
-					{:else}
-						{#each Array(12).fill(0) as _, index}
-							<Skeleton class="h-[50px] w-full rounded-xl" />
-						{/each}
-					{/if}
-				</div>
-			</Tabs.Content>
-		</Tabs.Root>
+<div class="mt-16 flex w-[1200px] items-start justify-center gap-16">
+	<div class="flex flex-row gap-10">
+		<SlotsColumn date={currentDate} slots={displaySlots(currentDate)} isLoading={isLoadingSlots} />
+		<SlotsColumn date={nextDate} slots={displaySlots(nextDate)} isLoading={isLoadingSlots} />
+		<SlotsColumn date={thirdDate} slots={displaySlots(thirdDate)} isLoading={isLoadingSlots} />
 	</div>
-	<!-- Show Checkout button if slots are selected; Alert Dialog for verification; Drawer for mobile -->
-	{#if $selectedSlots.length > 0}
-		<div class="flex items-center justify-center pt-10">
-			{#if $isDesktop}
-				<AlertDialog.Root>
-					<AlertDialog.Trigger asChild let:builder>
-						{#if isLoadingCheckout}
-							<Button disabled>
-								<Reload class="mr-2 h-4 w-4 animate-spin" />
-								Please wait
-							</Button>
-						{:else}
-							<Button builders={[builder]}>Checkout</Button>
-						{/if}
-					</AlertDialog.Trigger>
-					<AlertDialog.Content>
-						<AlertDialog.Header>
-							<AlertDialog.Title>Are you sure you want to checkout?</AlertDialog.Title>
-							<AlertDialog.Description>
-								You will be redirected to the payment site. Please make sure you have selected the
-								correct slots.
-							</AlertDialog.Description>
-						</AlertDialog.Header>
-						<AlertDialog.Footer>
-							<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-							<AlertDialog.Action on:click={() => bookSlots()}>Continue</AlertDialog.Action>
-						</AlertDialog.Footer>
-					</AlertDialog.Content>
-				</AlertDialog.Root>
-			{:else}
-				<!-- <Drawer.Root bind:open>
-					<Drawer.Trigger asChild let:builder>
-						{#if isLoadingCheckout}
-							<Button disabled>
-								<Reload class="mr-2 h-4 w-4 animate-spin" />
-								Please wait
-							</Button>
-						{:else}
-							<Button builders={[builder]}>Checkout</Button>
-						{/if}
-					</Drawer.Trigger>
-					<Drawer.Content>
-						<Drawer.Header class="text-left">
-							<Drawer.Title>Are you sure you want to checkout?</Drawer.Title>
-							<Drawer.Description>
-								You will be redirected to the payment site. Please make sure you have selected the
-								correct slots.
-							</Drawer.Description>
-						</Drawer.Header>
 
-						<Drawer.Footer class="pt-2">
-							<Drawer.Close asChild let:builder>
-								<Button variant="outline" builders={[builder]}>Cancel</Button>
-								<Button builders={[builder]} on:click={() => bookSlots()}>Continue</Button>
-							</Drawer.Close>
-						</Drawer.Footer>
-					</Drawer.Content>
-				</Drawer.Root> -->
-			{/if}
+	<div class="flex h-full flex-col items-center justify-center gap-10 px-4">
+		<div class="flex w-full flex-col gap-4">
+			<div class="w-full rounded-md border px-4 py-3 font-mono text-sm">
+				<p>Am Tempelhofer Berg 6, 10965 Berlin</p>
+			</div>
+
+			<Select.Root selected={selectedRoom} onSelectedChange={handleRoomChange}>
+				<Select.Trigger class="w-full px-4 py-3">
+					<Select.Value placeholder="Select a room" />
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Group>
+						<Select.Label>Rooms</Select.Label>
+						{#each rooms as room}
+							<Select.Item value={room.value}>{room.label}</Select.Item>
+						{/each}
+					</Select.Group>
+				</Select.Content>
+			</Select.Root>
+
+			<div class="w-full rounded-md border px-4 py-3 font-mono text-sm">
+				{#if $selectedSlots.length === 0}
+					<p>No slots selected</p>
+				{:else}
+					{#each $selectedSlots as slot}
+						<p class="mb-2">
+							{format(slot.startTime, 'MMM d')},
+							{format(slot.startTime, 'HH:mm')}-{format(slot.endTime, 'HH:mm')}
+						</p>
+					{/each}
+				{/if}
+			</div>
 		</div>
-	{/if}
-</main>
+
+		<div class="flex w-full flex-col gap-4">
+			<CalendarV2 />
+			<Button class="w-full">Continue</Button>
+		</div>
+	</div>
+</div>

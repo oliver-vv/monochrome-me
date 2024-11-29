@@ -1,80 +1,87 @@
 <script lang="ts">
+	import Logo from '$lib/components/ui/navbar/Logo.svelte';
 	import { Button } from '../button';
-	import NavbarDesktop from './navbar-desktop.svelte';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import Separator from '../separator/separator.svelte';
+	import UserMenu from '$lib/components/ui/navbar/UserMenu.svelte';
+	import AuthButtons from '$lib/components/ui/navbar/AuthButtons.svelte';
+	import { page } from '$app/stores';
+	import { tweened } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
+	import type { Session, SupabaseClient } from '@supabase/supabase-js';
+	import { invalidateAll } from '$app/navigation';
 
-	export let data: any;
+	export let data: { supabase: SupabaseClient; session: Session | null };
 
-	let { supabase, session } = data;
 	$: ({ supabase, session } = data);
 
-	async function logout() {
-		const response = await fetch('/auth/logout', { method: 'POST' });
+	const navItems = [
+		{ label: 'Home', href: '/' },
+		{ label: 'Book Now', href: '/booking' },
+		{ label: 'About Us', href: '/about-us' },
+		{ label: 'FAQ', href: '/faq' }
+	];
 
-		if (response.ok) {
-			// If the logout was successful, redirect the user
-			window.location.href = '/';
+	let navContainer: HTMLDivElement;
+	$: activeItem = tweened({ width: 0, left: 0, opacity: 0 }, { duration: 300, easing: cubicOut });
+
+	$: if (navContainer) updateActiveItem($page.url.pathname);
+
+	function updateActiveItem(pathname: string) {
+		if (!navContainer) return;
+
+		const activeButton = navContainer.querySelector(`[href="${pathname}"]`);
+		if (activeButton) {
+			const rect = activeButton.getBoundingClientRect();
+			const containerRect = navContainer.getBoundingClientRect();
+			activeItem.set({
+				width: rect.width,
+				left: rect.left - containerRect.left,
+				opacity: 1
+			});
 		} else {
-			// Handle error case
-			const result = await response.json();
-			console.error('Logout failed:', result.error);
+			activeItem.set({ width: 0, left: $activeItem.left, opacity: 0 });
 		}
+	}
+
+	async function logout() {
+		const { error } = await supabase.auth.signOut();
+		if (error) console.error('Error logging out:', error);
+		await invalidateAll();
 	}
 </script>
 
-<nav>
-	<div class="sticky z-50 mt-5">
-		<!-- <NavbarDesktop {data} /> -->
-		<div class="mx-auto flex h-10 w-[1120px] flex-shrink-0 items-center justify-between">
-			<a href="/">
-				<img class="block h-20 w-auto p-2" src="/logo.png" alt="Monochrome Me" />
-			</a>
-			<div class="flex gap-5">
-				<Button variant="ghost" href="/booking">Book Now</Button>
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						<Button variant="ghost">Dashbaord</Button>
-					</DropdownMenu.Trigger>
-					<!-- 15px offset -->
-					<DropdownMenu.Content sideOffset={15} class="w-40">
-						<DropdownMenu.Group class="grid gap-1">
-							<DropdownMenu.Label class="h-8">My Dashboard</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							<DropdownMenu.Item href="/sessions" class="h-10">Sessions</DropdownMenu.Item>
-							<DropdownMenu.Item href="/downloads" class="h-10">Downloads</DropdownMenu.Item>
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-				<Button variant="ghost" href="/about-us">About Us</Button>
-				<Button variant="ghost" href="/faq">FAQ</Button>
-			</div>
+<nav class="sticky z-50 mt-4">
+	<div class="flex min-h-[82px] w-full items-center justify-between px-28 max-md:px-5">
+		<a href="/" class="block h-24 w-24 p-2">
+			<Logo />
+		</a>
 
-			{#if session}
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						<Avatar.Root>
-							<Avatar.Fallback>{session?.user?.email?.slice(0, 1).toUpperCase()}</Avatar.Fallback>
-						</Avatar.Root>
-					</DropdownMenu.Trigger>
-					<!-- 15px offset -->
-					<DropdownMenu.Content sideOffset={15} class="w-40">
-						<DropdownMenu.Group class="grid gap-1">
-							<DropdownMenu.Label class="h-8">My Account</DropdownMenu.Label>
-							<DropdownMenu.Item class="h-10">Profile</DropdownMenu.Item>
-							<DropdownMenu.Item class="h-10">Settings</DropdownMenu.Item>
-							<DropdownMenu.Separator />
-							<DropdownMenu.Item on:click={logout} class="h-10">Sign Out</DropdownMenu.Item>
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-			{:else}
-				<div class="flex gap-4">
-					<Button variant="secondary" href="/auth/login">Login</Button>
-					<Button href="/auth/register">Register</Button>
+		<div class="relative flex gap-5" bind:this={navContainer}>
+			{#each navItems as item}
+				<div class="relative" class:active={$page.url.pathname === item.href}>
+					<Button
+						variant="ghost"
+						href={item.href}
+						class="font-mono text-base font-medium text-[#2d2d2d] hover:bg-transparent"
+					>
+						{item.label}
+					</Button>
 				</div>
+			{/each}
+			{#if $activeItem}
+				<div
+					class="absolute h-0.5 bg-[#2d2d2d] transition-all duration-300"
+					style:width="{$activeItem.width}px"
+					style:transform="translateX({$activeItem.left}px)"
+					style:opacity={$activeItem.opacity}
+					style:bottom="-8px"
+				></div>
 			{/if}
 		</div>
+
+		<!-- {#if session}
+			<UserMenu {session} {logout} />
+		{:else}
+			<AuthButtons />
+		{/if} -->
 	</div>
 </nav>

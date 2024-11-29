@@ -30,18 +30,14 @@ export const actions: Actions = {
 			email: form.data.email,
 			password: form.data.password
 		});
+
 		if (error) {
 			return message(form, error.message, {
 				status: 401
 			});
 		} else {
-			// setFlash({ type: 'success', message: 'Please enter text.' }, event.cookies);
-
-			redirect(
-				'/dashboard',
-				{ type: 'success', message: 'Successfully logged in!' },
-				event.cookies
-			);
+			const redirectTo = event.url.searchParams.get('redirect') || '/dashboard';
+			redirect(redirectTo, { type: 'success', message: 'Successfully logged in!' }, event.cookies);
 		}
 	}
 };

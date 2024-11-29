@@ -33,18 +33,18 @@
 
 <Toaster theme="light" richColors position="bottom-right" />
 
-<div class="flex min-h-screen flex-col">
-	<Navbar {data} />
-
-	<!-- <main class="flex flex-1 items-center justify-center"> -->
-	<!-- Main content goes here -->
-	<!-- <div class=" w-full mx-auto max-w-7xl sm:px-6 lg:px-8">
-
-		</div> -->
-
-	<!-- </main> -->
-	<main class="flex flex-1 items-center justify-center">
-		<slot />
-	</main>
-	<Footer />
-</div>
+{#if $page.url.pathname.startsWith('/admin')}
+	<div class="flex min-h-screen flex-col bg-[#FFFBF2]">
+		<main class="flex flex-1 items-center justify-center">
+			<slot />
+		</main>
+	</div>
+{:else}
+	<div class="flex min-h-screen flex-col bg-[#FFFBF2]">
+		<!-- <Navbar {data} /> -->
+		<main class="flex-1 items-center justify-center">
+			<slot />
+		</main>
+		<Footer />
+	</div>
+{/if}

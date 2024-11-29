@@ -49,10 +49,35 @@
 }
 
 @layer base {
+	:root {
+		view-transition-name: none;
+	}
 	* {
 		@apply border-border;
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+
+	/* Hide scrollbar for Chrome, Safari and Opera */
+	html::-webkit-scrollbar,
+	body::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* Hide scrollbar for IE, Edge and Firefox */
+	html,
+	body {
+		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
+	}
+}
+
+@layer base {
+	::selection {
+		@apply bg-primary text-primary-foreground;
+	}
+	::-moz-selection {
+		@apply bg-primary text-primary-foreground;
 	}
 }

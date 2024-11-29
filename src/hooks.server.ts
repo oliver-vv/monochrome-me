@@ -1,6 +1,8 @@
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { createServerClient } from '@supabase/ssr';
 import { redirect, type Handle } from '@sveltejs/kit';
+import { UserRole } from './types/UserRole';
+import { prisma } from '$lib/server/prisma';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
@@ -38,13 +40,30 @@ export const handle: Handle = async ({ event, resolve }) => {
 		data: { session }
 	} = await event.locals.supabase.auth.getSession();
 
+	// Check if the route is admin and user is not authenticated
+	if (event.url.pathname.startsWith('/admin')) {
+		if (!session) {
+			throw redirect(302, '/auth/login?redirect=/admin');
+		}
+
+		// Fetch user role using Prisma
+		const profile = await prisma.profiles.findUnique({
+			where: { id: session.user.id },
+			select: { role: true }
+		});
+
+		if (!profile || profile.role !== UserRole.Admin) {
+			throw redirect(302, '/');
+		}
+	}
+
 	// Add more protected routes as needed
-	const protectedRoutes = ['/sessions', '/downloads', '/profile'];
+	const protectedRoutes = ['/dashboard'];
 	const isProtected = protectedRoutes.includes(event.url.pathname);
 
 	if (isProtected && !session) {
 		// User is not authenticated, redirect to the login page
-		throw redirect(302, '/auth/register');
+		throw redirect(302, '/auth/login');
 	}
 
 	// redirect to dashbaord if user is authenticated

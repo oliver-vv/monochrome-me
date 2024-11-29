@@ -2,10 +2,8 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '$lib/server/prisma'; // Make sure to import your initialized PrismaClient instance correctly
 
 export const GET: RequestHandler = async ({ url }) => {
-	// Extract the date from the query string
 	const dateQuery = url.searchParams.get('date');
 
-	// Basic validation for date query
 	if (!dateQuery) {
 		return new Response(
 			JSON.stringify({
@@ -18,34 +16,34 @@ export const GET: RequestHandler = async ({ url }) => {
 	try {
 		const selectedDate = new Date(dateQuery);
 
-		// Ensuring the date is valid
 		if (isNaN(selectedDate.getTime())) {
 			throw new Error('Invalid date format.');
 		}
 
-		// Fetch slots for the selected date
 		const slotsForSelectedDate = await prisma.slot.findMany({
 			where: {
-				date: selectedDate,
-				available: true
+				date: selectedDate
 			},
-			orderBy: {
-				room: 'asc'
-			}
+			orderBy: [{ room: 'asc' }, { startTime: 'asc' }]
 		});
 
-		// Optionally, segregate slots by room if needed
-		const blackRoomSlots = slotsForSelectedDate.filter((slot) => slot.room === 'BLACK');
-		const whiteRoomSlots = slotsForSelectedDate.filter((slot) => slot.room === 'WHITE');
+		// Separate slots by room type
+		const whiteSlots = slotsForSelectedDate.filter((slot) => slot.room === 'WHITE');
+		const blackSlots = slotsForSelectedDate.filter((slot) => slot.room === 'BLACK');
+
+		console.log('Fetched slots:', { white: whiteSlots.length, black: blackSlots.length });
 
 		return new Response(
 			JSON.stringify({
-				blackRoomSlots,
-				whiteRoomSlots
+				slots: {
+					white: whiteSlots,
+					black: blackSlots
+				}
 			}),
 			{ status: 200 }
 		);
 	} catch (err) {
+		console.error('Error fetching slots:', err);
 		return new Response(
 			JSON.stringify({
 				error: (err as Error).message

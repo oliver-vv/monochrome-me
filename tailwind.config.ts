@@ -2,6 +2,7 @@ import { fontFamily } from 'tailwindcss/defaultTheme';
 
 /** @type {import('tailwindcss').Config} */
 const config = {
+	mode: 'jit',
 	darkMode: ['class'],
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	safelist: ['dark'],
@@ -13,7 +14,15 @@ const config = {
 				'2xl': '1400px'
 			}
 		},
+		screens: {
+			tablet: '960px',
+			desktop: '1280px'
+		},
 		extend: {
+			fontSize: {
+				'6xl': ['60px', { lineHeight: '24px', letterSpacing: '-0.02em' }],
+				'7xl': ['96px', { lineHeight: '24px', letterSpacing: '-0.02em' }]
+			},
 			colors: {
 				border: 'hsl(var(--border) / <alpha-value>)',
 				input: 'hsl(var(--input) / <alpha-value>)',

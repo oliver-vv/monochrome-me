@@ -41,11 +41,12 @@
 	}
 </script>
 
-<div class="gap-5 grid">
+<div class="grid gap-5">
 	<SuperDebug data={$formData} />
 
 	<Card.Root class="w-full max-w-sm">
 		<form method="POST" use:enhance class="">
+			<input type="hidden" name="redirect" value={$page.url.searchParams.get('redirect') || '/'} />
 			<Card.Header>
 				<Card.Title class="text-2xl">Login</Card.Title>
 				<Card.Description>Enter your email below to login to your account.</Card.Description>
